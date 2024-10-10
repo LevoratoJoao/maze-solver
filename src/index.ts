@@ -2,12 +2,32 @@ const BOARD_ROWS = 16; // TODO: Add input to decide how many rows and cols the b
 const BOARD_COLS = BOARD_ROWS;
 
 // Creating the canvas and the board
-type State = 'path' | 'wall';
-const board: Array<Array<State>> = [];
-for (let r = 0; r < BOARD_ROWS; r++) {
-    board.push(new Array(BOARD_COLS).fill('path'));
+type State = number;
+type Board = State[][];
+const stateColor = ["#202020", "#FF5050", "#50FF50", "#5050FF"] // 0: path, 1: wall, 2: start, 3: goal
+
+
+function createBoard(): Board {
+    const board: Board = [];
+    for (let r = 0; r < BOARD_ROWS; r++) {
+        board.push(new Array<State>(BOARD_COLS).fill(0));
+    }
+    return board;
 }
 
+class Game {
+    private board: Board = []
+    private start: number[] = [];
+    private goal: number[] = [];
+
+    constructor(board: Board, start: number[], goal: number[] = []) {
+        this.board = board;
+        this.start = start;
+        this.goal = goal;
+    }
+}
+
+const board: Board = createBoard();
 const canvasId = "app"
 const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
 if (canvas === null) {
@@ -21,16 +41,13 @@ if (ctx === null) {
 }
 
 // Rendering the cells
-function render() {
-    if (!ctx) {
-        throw new Error('2d context is not available');
-    }
+function render(ctx: CanvasRenderingContext2D, board: Array<Array<State>>) {
     ctx.fillStyle = "#202020"
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "red";
+    ctx.fillStyle = "#FF5050";
     for (let r = 0; r < BOARD_ROWS; r++) {
         for (let c = 0; c < BOARD_COLS; c++) {
-            if (board[r][c] === 'wall') {
+            if (board[r][c] === 1) {
                 const x = r * CELL_WIDTH;
                 const y = c * CELL_HEIGHT;
                 ctx.fillRect(x, y, CELL_WIDTH, CELL_HEIGHT);
@@ -49,20 +66,20 @@ canvas.addEventListener('mousedown', (e) => {
     isMouseDown = true;
     let col = Math.floor(e.offsetX / CELL_WIDTH);
     let row = Math.floor(e.offsetY / CELL_HEIGHT);
-    if (board[col][row] === 'wall') {
-        board[col][row] = 'path';
+    if (board[col][row] === 1) {
+        board[col][row] = 0;
     }
-    render();
+    render(ctx, board);
 });
 
 canvas.addEventListener("mousemove", (e) => {
     if (isMouseDown) {
         let col = Math.floor(e.offsetX / CELL_WIDTH);
         let row = Math.floor(e.offsetY / CELL_HEIGHT);
-        if (board[col][row] === 'path') {
-            board[col][row] = 'wall';
+        if (board[col][row] === 0) {
+            board[col][row] = 1;
         }
-        render();
+    render(ctx, board);
     }
 });
 
@@ -70,4 +87,4 @@ canvas.addEventListener('mouseup', () => {
     isMouseDown = false;
 });
 
-render();
+render(ctx, board);

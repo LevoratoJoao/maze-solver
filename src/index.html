@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Maze Maker</title>
+</head>
+<body>
+    <!-- // TODO: Add input to decide how many rows and cols the board has -->
+    <h1>Maze Maker - TypeScript</h1>
+    <fieldset>
+        <legend>State:</legend>
+        <div>
+            <input type="radio" name="state" id="wall", value="wall" checked>
+            <label for="wall">Wall</label>
+        </div>
+        <div>
+            <input type="radio" name="state" id="path", value="path">
+            <label for="path">path</label>
+        </div>
+        <div>
+            <input type="radio" name="state" id="start", value="start">
+            <label for="start">Start</label>
+        </div>
+        <div>
+            <input type="radio" name="state" id="goal", value="goal">
+            <label for="goal">Goal</label>
+        </div>
+    </fieldset>
+    <p></p>
+    <canvas id="app"></canvas>
+    <script src="index.js"></script>
+</body>
+</html>
