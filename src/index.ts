@@ -7,6 +7,10 @@ type Board = State[][];
 // 0: path, 1: wall, 2: start, 3: goal, 4: route
 const stateColor = ["#202020", "#555555", "#50FF50", "#50FFFF", "#FF5050"]
 
+class DFS {
+
+}
+
 class Game {
     private _canvas: HTMLCanvasElement;
     private _ctx: CanvasRenderingContext2D | null;
