@@ -2,19 +2,55 @@ const BOARD_ROWS = 16; // TODO: Add input to decide how many rows and cols the b
 const BOARD_COLS = BOARD_ROWS;
 
 // Types and colors
-type State = number;
-type Board = State[][];
+type Board = number[][];
 // 0: path, 1: wall, 2: start, 3: goal, 4: route
-const stateColor = ["#202020", "#555555", "#50FF50", "#50FFFF", "#FF5050"]
+const stateColor = ["#202020", "#555555", "#50FF50", "#50FFFF", "#FF5050"];
 
-class DFS {
+interface GraphNode {
+    value: string;
+    neighbors: GraphNode[];
+}
 
+class Graph {
+    private nodes: GraphNode[];
+
+    constructor() {
+        this.nodes = [];
+    }
+
+    addNode(value: string): void {
+        const node: GraphNode = { value, neighbors: [] };
+        this.nodes.push(node);
+    }
+
+    addEdge(source: GraphNode, destination: GraphNode): void {
+        source.neighbors.push(destination);
+    }
+
+    dfs(startNode: GraphNode): void {
+        const visited = new Set();
+        const stack: GraphNode[] = [startNode];
+
+        while (stack.length > 0) {
+            const currentNode = stack.pop()!;
+            if (!visited.has(currentNode)) {
+                visited.add(currentNode);
+                console.log(currentNode.value);
+
+                for (const neighbor of currentNode.neighbors) {
+                    if (!visited.has(neighbor)) {
+                        stack.push(neighbor);
+                    }
+                }
+            }
+        }
+    }
 }
 
 class Game {
     private _canvas: HTMLCanvasElement;
     private _ctx: CanvasRenderingContext2D | null;
-    private _board: Board = []
+    private _board: Board = [];
     private _start: number[] = [];
     private _goal: number[] = [];
 
@@ -58,7 +94,7 @@ class Game {
     private createBoard(): Board {
         const board: Board = [];
         for (let r = 0; r < BOARD_ROWS; r++) {
-            board.push(new Array<State>(BOARD_COLS).fill(0));
+            board.push(new Array<number>(BOARD_COLS).fill(0));
         }
         return board;
     }
@@ -150,3 +186,57 @@ game.canvas.addEventListener('mouseup', () => {
 });
 
 game.render();
+
+function solve() {
+    const path: number[][] = dfs();
+
+    for (const p of path) {
+        const x = p[0] * CELL_HEIGHT;
+        const y = p[1] * CELL_WIDTH;
+
+        game.ctx.fillStyle = stateColor[4];
+        game.ctx.fillRect(x, y, CELL_WIDTH, CELL_HEIGHT);
+    }
+}
+
+function getNeighbours(cell: number[]): number[][] {
+    let ngb = [];
+    for (let dr = -1; dr <= 1; ++dr) {
+        for (let dc = -1; dc <= 1; ++dc) {
+            if (dr != 0 || dc != 0) {
+                const r = cell[0] + dr;
+                const c = cell[1] + dc;
+                if ((0 <= r && r < BOARD_ROWS) && (0 <= c && c < BOARD_COLS)) {
+                    if (game.board[r][c] === 0 || game.board[r][c] === 3) {
+                        ngb.push([r, c]);
+                    }
+                }
+            }
+        }
+    }
+    return ngb;
+}
+
+function dfs(): number[][] {
+    const visitedCells = new Map<string, number[]>();
+    const stack: number[][] = [game.start];
+    const path: number[][] = [];
+
+    while (stack.length > 0) {
+        const currentCell = stack.pop()!;
+        if (!visitedCells.has(currentCell.toString())) {
+            visitedCells.set(currentCell.toString(), currentCell);
+            // Explore neighboring cells
+            for (const neighbour of getNeighbours(currentCell)) {
+                if (game.goal.every((val, index) => val === neighbour[index])) {
+                    return path;
+                }
+                if (!visitedCells.has(neighbour.toString())) {
+                    path.push(neighbour);
+                    stack.push(neighbour);
+                }
+            }
+        }
+    }
+    return [];
+}
