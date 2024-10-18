@@ -28,6 +28,14 @@
             <label for="goal">Goal</label>
         </div>
     </fieldset>
+    <label for="solve-options">Choose a solve option:</label>
+
+    <select name="solve" id="solve-options">
+        <option value="">--Please choose an option--</option>
+        <option value="dfs">dfs</option>
+        <option value="bfs">bfs</option>
+        <option value="a*">a*</option>
+    </select>
     <button onclick="solve()">Solve</button>
     <p></p>
     <canvas id="app"></canvas>
