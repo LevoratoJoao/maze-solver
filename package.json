@@ -2,10 +2,10 @@
   "name": "maze",
   "version": "1.0.0",
   "description": "TypeScript Maze Maker",
-  "main": "index.js",
+  "main": "index.mjs",
   "scripts": {
     "build": "tsc",
-    "start": "node src/index.mjs",
+    "start": "node dist/server.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "levoratojoao",

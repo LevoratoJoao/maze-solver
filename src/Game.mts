@@ -1,15 +1,15 @@
-import { Board, State, stateColor, CELL_WIDTH, CELL_HEIGHT, BOARD_ROWS, BOARD_COLS } from "./index.mjs";
+import { Board, stateColor, CELL_WIDTH, CELL_HEIGHT, BOARD_ROWS, BOARD_COLS } from "./index.mjs";
 
 export class Game {
     private _canvas: HTMLCanvasElement;
     private _ctx: CanvasRenderingContext2D | null;
-    private _board: Board = []
+    private _board: Board = [];
     private _start: number[] = [];
     private _goal: number[] = [];
 
     constructor() {
         this._board = this.createBoard();
-        this._canvas = document.getElementById('app') as HTMLCanvasElement;;
+        this._canvas = document.getElementById("app") as HTMLCanvasElement;
         if (this._canvas === null) {
             throw new Error('Could not find canvas');
         }
@@ -29,6 +29,10 @@ export class Game {
         return this._board;
     }
 
+    public set board(b: Board) {
+        this._board = b;
+    }
+
     public get ctx(): CanvasRenderingContext2D {
         if (this._ctx === null) {
             throw new Error('Could not initialize 2d context');
@@ -44,10 +48,10 @@ export class Game {
         return this._goal;
     }
 
-    private createBoard(): Board {
+    public createBoard(): Board {
         const board: Board = [];
         for (let r = 0; r < BOARD_ROWS; r++) {
-            board.push(new Array<State>(BOARD_COLS).fill(0));
+            board.push(new Array<number>(BOARD_COLS).fill(0));
         }
         return board;
     }
