@@ -187,13 +187,9 @@ game.canvas.addEventListener('mouseup', () => {
 
 game.render();
 
-
 function solve() {
-    const selectElement = document.getElementById('solve-options') as HTMLSelectElement;
-    let path: number[][] = [];
-    if (selectElement.selectedIndex === 1) {
-        path = dfs();
-    }
+    const path: number[][] = dfs();
+
     for (const p of path) {
         const x = p[0] * CELL_HEIGHT;
         const y = p[1] * CELL_WIDTH;
