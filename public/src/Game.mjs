@@ -1,15 +1,11 @@
-import { Board, stateColor, CELL_WIDTH, CELL_HEIGHT, BOARD_ROWS, BOARD_COLS } from "./index.mjs";
-
+import { stateColor, CELL_WIDTH, CELL_HEIGHT, BOARD_ROWS, BOARD_COLS } from "./index.mjs";
 export class Game {
-    private _canvas: HTMLCanvasElement;
-    private _ctx: CanvasRenderingContext2D | null;
-    private _board: Board = [];
-    private _start: number[] = [];
-    private _goal: number[] = [];
-
     constructor() {
+        this._board = [];
+        this._start = [];
+        this._goal = [];
         this._board = this.createBoard();
-        this._canvas = document.getElementById("app") as HTMLCanvasElement;
+        this._canvas = document.getElementById("app");
         if (this._canvas === null) {
             throw new Error('Could not find canvas');
         }
@@ -20,43 +16,35 @@ export class Game {
             throw new Error('Could not initialize 2d context');
         }
     }
-
-    public get canvas(): HTMLCanvasElement {
+    get canvas() {
         return this._canvas;
     }
-
-    public get board(): Board {
+    get board() {
         return this._board;
     }
-
-    public set board(b: Board) {
+    set board(b) {
         this._board = b;
     }
-
-    public get ctx(): CanvasRenderingContext2D {
+    get ctx() {
         if (this._ctx === null) {
             throw new Error('Could not initialize 2d context');
         }
         return this._ctx;
     }
-
-    public get start(): number[] {
+    get start() {
         return this._start;
     }
-
-    public get goal(): number[] {
+    get goal() {
         return this._goal;
     }
-
-    public createBoard(): Board {
-        const board: Board = [];
+    createBoard() {
+        const board = [];
         for (let r = 0; r < BOARD_ROWS; r++) {
-            board.push(new Array<number>(BOARD_COLS).fill(0));
+            board.push(new Array(BOARD_COLS).fill(0));
         }
         return board;
     }
-
-    public render() {
+    render() {
         for (let r = 0; r < BOARD_ROWS; ++r) {
             for (let c = 0; c < BOARD_COLS; ++c) {
                 const x = r * CELL_HEIGHT;
@@ -81,7 +69,6 @@ export class Game {
                             this._ctx.fillStyle = stateColor[3];
                             this._ctx.fillRect(x, y, CELL_WIDTH, CELL_HEIGHT);
                             break;
-
                         default:
                             break;
                     }
@@ -90,3 +77,4 @@ export class Game {
         }
     }
 }
+//# sourceMappingURL=Game.mjs.map
