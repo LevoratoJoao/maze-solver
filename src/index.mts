@@ -76,14 +76,21 @@ function randomBoard() {
 
 let mazePath: number[][] = [];
 
+document.getElementById("solve")?.addEventListener("click", solve);
+document.getElementById("randomBoard")?.addEventListener("click", randomBoard);
+document.getElementById("resetPath")?.addEventListener("click", resetPath);
+document.getElementById("resetBoard")?.addEventListener("click", resetBoard);
+
 function solve() {
     const selectElement = document.getElementById('solve-options') as HTMLSelectElement;
 
     switch (selectElement.selectedIndex) {
         case 1:
+            resetPath();
             mazePath = dfs();
             break;
         case 2:
+            resetPath();
             mazePath = bfs();
             break;
         case 3:
@@ -92,14 +99,20 @@ function solve() {
         default:
             break;
     }
-    for (const p of mazePath) {
-        const x = p[0] * CELL_HEIGHT;
-        const y = p[1] * CELL_WIDTH;
-
-        game.ctx.fillStyle = stateColor[4];
-        game.ctx.fillRect(x, y, CELL_WIDTH, CELL_HEIGHT);
+    let index = 0;
+    function fillPath() {
+        if (index < mazePath.length) {
+            const x = mazePath[index][0] * CELL_HEIGHT;
+            const y = mazePath[index][1] * CELL_WIDTH;
+            game.ctx.fillStyle = stateColor[4];
+            game.ctx.fillRect(x, y, CELL_WIDTH, CELL_HEIGHT);
+            index++;
+            setTimeout(fillPath, 250);
+        }
     }
+    fillPath();
 }
+
 
 function resetPath() {
     for (const p of mazePath) {
@@ -115,12 +128,20 @@ function resetBoard() {
     game.board = game.createBoard();
     game.render();
 }
-
+/**
+ *  TODO: More optimized, try latter
+    const directions = [
+        [-1, 0], [1, 0], // vertical
+        [0, -1], [0, 1]  // horizontal
+    ];
+    const neighbours = [];
+    for (const [dr, dc] of directions) {
+ */
 function getNeighbours(cell: number[]): number[][] {
     let ngb = [];
     for (let dr = -1; dr <= 1; ++dr) {
         for (let dc = -1; dc <= 1; ++dc) {
-            if (dr != 0 || dc != 0) {
+            if ((dr != 0 || dc != 0) && (dr != dc) && (dr != -dc)) {
                 const r = cell[0] + dr;
                 const c = cell[1] + dc;
                 if ((0 <= r && r < BOARD_ROWS) && (0 <= c && c < BOARD_COLS)) {
@@ -135,19 +156,21 @@ function getNeighbours(cell: number[]): number[][] {
 }
 
 function dfs(): number[][] {
-    const visitedCells = new Map<string, number[]>();
+    const visitedCells = new Set<string>();
     const stack: number[][] = [game.start];
     const mazePath: number[][] = [];
 
     while (stack.length > 0) {
         const currentCell = stack.pop()!;
+        if (game.goal.toString() === currentCell.toString()) {
+            console.log("Goal was found, path: ", mazePath);
+            mazePath.pop();
+            return mazePath;
+        }
         if (!visitedCells.has(currentCell.toString())) {
-            visitedCells.set(currentCell.toString(), currentCell);
+            visitedCells.add(currentCell.toString());
             // Explore neighboring cells
             for (const neighbour of getNeighbours(currentCell)) {
-                if (game.goal.every((val, index) => val === neighbour[index])) {
-                    return mazePath;
-                }
                 if (!visitedCells.has(neighbour.toString())) {
                     mazePath.push(neighbour);
                     stack.push(neighbour);
@@ -155,27 +178,33 @@ function dfs(): number[][] {
             }
         }
     }
+    console.log("Goal was not found, current path: ", mazePath);
     return mazePath;
 }
 
 function bfs(): number[][] {
-    const visitedCells = new Map<string, number[]>();
+    const visitedCells = new Set<string>();
     const queue: number[][] = [game.start];
     const mazePath: number[][] = [];
-    visitedCells.set(game.start.toString(), game.start);
+
     while (queue.length > 0) {
-        const currentCell = queue.pop()!;
-        // Explore neighboring cells
-        for (const neighbour of getNeighbours(currentCell)) {
-            if (game.goal.every((val, index) => val === neighbour[index])) {
-                return mazePath;
-            }
-            if (!visitedCells.has(neighbour.toString())) {
-                visitedCells.set(currentCell.toString(), currentCell);
-                mazePath.push(neighbour);
-                queue.unshift(neighbour);
+        const currentCell = queue.shift()!;
+        if (game.goal.toString() === currentCell.toString()) {
+            console.log("Goal was found, path: ", mazePath);
+            mazePath.pop();
+            return mazePath;
+        }
+        if (!visitedCells.has(currentCell.toString())) {
+            visitedCells.add(currentCell.toString());
+            // Explore neighboring cells
+            for (const neighbour of getNeighbours(currentCell)) {
+                if (!visitedCells.has(neighbour.toString())) {
+                    mazePath.push(neighbour);
+                    queue.push(neighbour);
+                }
             }
         }
     }
+    console.log("Goal was not found, current path: ", mazePath);
     return mazePath;
 }

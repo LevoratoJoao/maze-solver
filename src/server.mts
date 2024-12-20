@@ -10,12 +10,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(express.static(path.join(__dirname, 'public')))
+app.use('/dist', express.static(path.join(__dirname, '../dist')));
 
 // app.use(express.static(path.join(__dirname, 'views')));
 
 app.get("/", (req: Request, res: Response) => {
   console.log('Hello, World!');
-  res.sendFile(path.join(__dirname, '../public/view/index.html'));
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 const PORT = 6970;
