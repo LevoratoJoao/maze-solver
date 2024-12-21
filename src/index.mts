@@ -10,13 +10,11 @@ export const stateColor = ["#202020", "#555555", "#50FF50", "#50FFFF", "#FF5050"
 
 const game = new Game();
 
-// Creating the cells
-export const CELL_WIDTH = game.canvas.width / BOARD_COLS;
-export const CELL_HEIGHT = game.canvas.height / BOARD_ROWS;
+
 
 game.canvas.addEventListener('click', (e) => {
-    const col = Math.floor(e.offsetX / CELL_WIDTH);
-    const row = Math.floor(e.offsetY / CELL_HEIGHT);
+    const col = Math.floor(e.offsetX / game.CELL_WIDTH);
+    const row = Math.floor(e.offsetY / game.CELL_HEIGHT);
 
     const state = document.getElementsByName("state");
     for (let i = 0; i < state.length; i++) {
@@ -42,8 +40,8 @@ game.canvas.addEventListener('mousedown', () => {
 
 game.canvas.addEventListener("mousemove", (e) => {
     if (isMouseDown) {
-        let col = Math.floor(e.offsetX / CELL_WIDTH);
-        let row = Math.floor(e.offsetY / CELL_HEIGHT);
+        let col = Math.floor(e.offsetX / game.CELL_WIDTH);
+        let row = Math.floor(e.offsetY / game.CELL_HEIGHT);
         const selectedState = document.querySelector('input[name="state"]:checked') as HTMLInputElement;
         if (selectedState && selectedState.value === "wall") {
             game.board[col][row] = 1;
@@ -60,38 +58,26 @@ game.canvas.addEventListener('mouseup', () => {
 
 game.render();
 
-function randomBoard() {
-    const board: Board = game.createBoard();
-    for (let r = 0; r < BOARD_ROWS; ++r) {
-        for (let c = 0; c < BOARD_COLS; ++c) {
-            const x = r * CELL_HEIGHT;
-            const y = c * CELL_WIDTH;
-            let rndColor = Math.floor(Math.random() * 2)
-            board[r][c] = rndColor;
-        }
-    }
-    game.board = board;
-    game.render();
-}
-
 let mazePath: number[][] = [];
 
 document.getElementById("solve")?.addEventListener("click", solve);
-document.getElementById("randomBoard")?.addEventListener("click", randomBoard);
+document.getElementById("randomBoard")?.addEventListener("click", game.createRandomBoard);
 document.getElementById("resetPath")?.addEventListener("click", resetPath);
-document.getElementById("resetBoard")?.addEventListener("click", resetBoard);
+document.getElementById("resetBoard")?.addEventListener("click", game.createEmptyBoard);
 
 function solve() {
     const selectElement = document.getElementById('solve-options') as HTMLSelectElement;
-
+    console.log("Game board: ", game.board);
+    console.log("Start: ", game.start);
+    console.log("Goal: ", game.goal);
     switch (selectElement.selectedIndex) {
         case 1:
-            resetPath();
             mazePath = dfs();
+            resetPath();
             break;
         case 2:
-            resetPath();
             mazePath = bfs();
+            resetPath();
             break;
         case 3:
 
@@ -102,12 +88,14 @@ function solve() {
     let index = 0;
     function fillPath() {
         if (index < mazePath.length) {
-            const x = mazePath[index][0] * CELL_HEIGHT;
-            const y = mazePath[index][1] * CELL_WIDTH;
-            game.ctx.fillStyle = stateColor[4];
-            game.ctx.fillRect(x, y, CELL_WIDTH, CELL_HEIGHT);
+            if ((mazePath[index][0] != game.goal[0] || mazePath[index][1] != game.goal[1])) {
+                const x = mazePath[index][0] * game.CELL_HEIGHT;
+                const y = mazePath[index][1] * game.CELL_WIDTH;
+                game.ctx.fillStyle = stateColor[4];
+                game.ctx.fillRect(x, y, game.CELL_WIDTH, game.CELL_HEIGHT);
+            }
             index++;
-            setTimeout(fillPath, 250);
+            setTimeout(fillPath, 100);
         }
     }
     fillPath();
@@ -116,18 +104,14 @@ function solve() {
 
 function resetPath() {
     for (const p of mazePath) {
-        const x = p[0] * CELL_HEIGHT;
-        const y = p[1] * CELL_WIDTH;
+        const x = p[0] * game.CELL_HEIGHT;
+        const y = p[1] * game.CELL_WIDTH;
 
         game.ctx.fillStyle = stateColor[0];
-        game.ctx.fillRect(x, y, CELL_WIDTH, CELL_HEIGHT);
+        game.ctx.fillRect(x, y, game.CELL_WIDTH, game.CELL_HEIGHT);
     }
 }
 
-function resetBoard() {
-    game.board = game.createBoard();
-    game.render();
-}
 /**
  *  TODO: More optimized, try latter
     const directions = [
