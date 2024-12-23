@@ -6,6 +6,7 @@ type Board = number[][];
 // 0: path, 1: wall, 2: start, 3: goal, 4: route
 const stateColor = ["#202020", "#555555", "#50FF50", "#50FFFF", "#FF5050"];
 let pathTimer: NodeJS.Timeout | null = null;
+let mazePath: number[][] = [];
 
 interface Cell {
     position: number[];
@@ -35,7 +36,7 @@ class Game {
         this._canvas.width = 400;
         this._canvas.height = 400;
         this.CELL_HEIGHT = this._canvas.height / BOARD_ROWS;
-        this.CELL_WIDTH = this._canvas.height / BOARD_COLS;
+        this.CELL_WIDTH = this._canvas.width / BOARD_COLS;
         this._ctx = this._canvas.getContext("2d");
         if (this._ctx === null) {
             throw new Error('Could not initialize 2d context');
@@ -73,6 +74,10 @@ class Game {
         return this._goal;
     }
 
+    public set goal(g: number[]) {
+        this._goal = g;
+    }
+
     public get CELL_WIDTH(): number {
         return this._CELL_WIDTH;
     }
@@ -90,9 +95,13 @@ class Game {
     }
 
     public createEmptyBoard() {
+        mazePath = [];
         const board: Board = [];
         for (let r = 0; r < BOARD_ROWS; r++) {
-            board.push(new Array<number>(BOARD_COLS).fill(0));
+            board[r] = [];
+            for (let c = 0; c < BOARD_COLS; c++) {
+                board[r][c] = 0;
+            }
         }
         this._board = board;
         this._goal = [];
@@ -101,13 +110,12 @@ class Game {
     }
 
     public createRandomBoard() {
+        mazePath = [];
         const board: Board = [];
         for (let r = 0; r < BOARD_ROWS; r++) {
-            board[r] = []
+            board[r] = [];
             for (let c = 0; c < BOARD_COLS; c++) {
-                const x = r * this.CELL_HEIGHT;
-                const y = c * this.CELL_WIDTH;
-                let rndColor = Math.floor(Math.random() * 2)
+                let rndColor = Math.floor(Math.random() * 2);
                 board[r][c] = rndColor;
             }
         }
@@ -121,10 +129,10 @@ class Game {
         if (pathTimer) {
             clearTimeout(pathTimer);
         }
-        for (let r = 0; r < BOARD_ROWS; ++r) {
-            for (let c = 0; c < BOARD_COLS; ++c) {
-                const x = r * this.CELL_HEIGHT;
-                const y = c * this.CELL_WIDTH;
+        for (let c = 0; c < BOARD_COLS; ++c) {
+            for (let r = 0; r < BOARD_ROWS; ++r) {
+                const x = r * this.CELL_WIDTH;
+                const y = c * this.CELL_HEIGHT;
                 if (this._ctx) {
                     switch (this._board[r][c]) {
                         case 0:
@@ -159,19 +167,25 @@ class Game {
 const game = new Game();
 
 game.canvas.addEventListener('click', (e) => {
-    const col = Math.floor(e.offsetX / game.CELL_WIDTH);
-    const row = Math.floor(e.offsetY / game.CELL_HEIGHT);
+    const col = Math.floor(e.offsetY / game.CELL_HEIGHT);
+    const row = Math.floor(e.offsetX / game.CELL_WIDTH);
 
     const state = document.getElementsByName("state");
     for (let i = 0; i < state.length; i++) {
         if ((state[i] as HTMLInputElement).checked) {
             if (i === 2 && game.start.length > 0) {
+                if (game.goal[0] === row && game.goal[1] === col) {
+                    game.goal = [];
+                }
                 game.board[game.start[0]][game.start[1]] = 0;
             }
             if (i === 3 && game.goal.length > 0) {
+                if (game.start[0] === row && game.start[1] === col) {
+                    game.start = [];
+                }
                 game.board[game.goal[0]][game.goal[1]] = 0;
             }
-            game.board[col][row] = i;
+            game.board[row][col] = i;
             game.render();
             return;
         }
@@ -186,13 +200,13 @@ game.canvas.addEventListener('mousedown', () => {
 
 game.canvas.addEventListener("mousemove", (e) => {
     if (isMouseDown) {
-        let col = Math.floor(e.offsetX / game.CELL_WIDTH);
-        let row = Math.floor(e.offsetY / game.CELL_HEIGHT);
+        let col = Math.floor(e.offsetY / game.CELL_HEIGHT);
+        let row = Math.floor(e.offsetX / game.CELL_WIDTH);
         const selectedState = document.querySelector('input[name="state"]:checked') as HTMLInputElement;
         if (selectedState && selectedState.value === "wall") {
-            game.board[col][row] = 1;
+            game.board[row][col] = 1;
         } else if (selectedState && selectedState.value === "path") {
-            game.board[col][row] = 0;
+            game.board[row][col] = 0;
         }
         game.render();
     }
@@ -204,8 +218,6 @@ game.canvas.addEventListener('mouseup', () => {
 
 game.render();
 
-let mazePath: number[][] = [];
-
 document.getElementById("solve")?.addEventListener("click", solve);
 document.getElementById("randomBoard")?.addEventListener("click", game.createRandomBoard);
 document.getElementById("resetPath")?.addEventListener("click", resetPath);
@@ -216,6 +228,7 @@ function solve() {
     console.log("Game board: ", game.board);
     console.log("Start: ", game.start);
     console.log("Goal: ", game.goal);
+    resetPath();
     switch (selectElement.selectedIndex) {
         case 1:
             mazePath = dfs();
@@ -224,7 +237,10 @@ function solve() {
             mazePath = bfs();
             break;
         case 3:
-            mazePath = bestChoice();
+            mazePath = greedyAlgo();
+            break;
+        case 4:
+            mazePath = astar();
             break;
         default:
             break;
@@ -256,7 +272,6 @@ function resetPath() {
         game.ctx.fillStyle = stateColor[0];
         game.ctx.fillRect(x, y, game.CELL_WIDTH, game.CELL_HEIGHT);
     }
-    mazePath = [];
 }
 
 /**
@@ -295,15 +310,15 @@ function dfs(): number[][] {
         const currentCell = stack.pop()!;
         if (game.goal.toString() === currentCell.toString()) {
             console.log("Goal was found, path: ", mazePath);
-            mazePath.pop();
+            mazePath.shift();
             return mazePath;
         }
         if (!visitedCells.has(currentCell.toString())) {
             visitedCells.add(currentCell.toString());
+            mazePath.push(currentCell);
             // Explore neighboring cells
             for (const neighbour of getNeighbours(currentCell)) {
                 if (!visitedCells.has(neighbour.toString())) {
-                    mazePath.push(neighbour);
                     stack.push(neighbour);
                 }
             }
@@ -322,15 +337,15 @@ function bfs(): number[][] {
         const currentCell = queue.shift()!;
         if (game.goal.toString() === currentCell.toString()) {
             console.log("Goal was found, path: ", mazePath);
-            mazePath.pop();
+            mazePath.shift();
             return mazePath;
         }
         if (!visitedCells.has(currentCell.toString())) {
             visitedCells.add(currentCell.toString());
+            mazePath.push(currentCell);
             // Explore neighboring cells
             for (const neighbour of getNeighbours(currentCell)) {
                 if (!visitedCells.has(neighbour.toString())) {
-                    mazePath.push(neighbour);
                     queue.push(neighbour);
                 }
             }
@@ -346,11 +361,17 @@ function manhanttanHeuristic(neighbour: number[], goal: number[]): number {
     return Math.abs(xy1[0] - xy2[0]) + Math.abs(xy1[1] - xy2[1]);
 }
 
+function euclideanHeuristic(neighbour: number[], goal: number[]): number {
+    let xy1 = neighbour;
+    let xy2 = goal;
+    return ( (xy1[0] - xy2[0]) ** 2 + (xy1[1] - xy2[1]) ** 2 ) ** 0.5;
+}
+
 function findBestNeighbour(neighbours: Array<Cell>): Cell {
     let bestNeighbour: Cell = { position: [], stringValue: "", cost: -1};
     let bestCost = Infinity;
     for (const neighbour of neighbours) {
-        const cost = neighbour.cost
+        const cost = neighbour.cost + 1
         if (cost < bestCost) {
             bestNeighbour = neighbour;
             bestCost = cost;
@@ -359,34 +380,46 @@ function findBestNeighbour(neighbours: Array<Cell>): Cell {
     return bestNeighbour;
 }
 
-function bestChoice(): number[][] {
+function greedyAlgo(): number[][] {
     let currentCell: Cell = {position: game.start, stringValue: game.start.toString(), cost: 0};
     const visitedCells = new Set<string>();
-    const ngbsHeuristic = new Array<Cell>();
+    // const ngbsHeuristic = new Array<Cell>();
+    const ngbsHeuristic = new PriorityQueue();
     const mazePath: number[][] = [];
 
     ngbsHeuristic.push(currentCell);
 
-    while (ngbsHeuristic.length > 0) {
+    while (ngbsHeuristic.size() > 0) {
         const poppedCell = ngbsHeuristic.pop();
-        if (!poppedCell) {
-            break;
-        }
         currentCell = poppedCell;
         if (game.goal.toString() === currentCell.stringValue) {
             console.log("Goal was found, path: ", mazePath);
-            mazePath.pop();
+            mazePath.shift();
             return mazePath;
         }
         if (!visitedCells.has(currentCell.stringValue)) {
             visitedCells.add(currentCell.stringValue);
-            for (const neighbour of getNeighbours(currentCell.position)) {
-                ngbsHeuristic.push({position: neighbour, stringValue: neighbour.toString(), cost: manhanttanHeuristic(neighbour, game.goal)});
-            }
-            currentCell = findBestNeighbour(ngbsHeuristic);
             mazePath.push(currentCell.position);
+            for (const neighbour of getNeighbours(currentCell.position)) {
+                if (!visitedCells.has(neighbour.toString())) {
+                    ngbsHeuristic.push({position: neighbour, stringValue: neighbour.toString(), cost: euclideanHeuristic(neighbour, game.goal)});
+                }
+            }
+            console.log(ngbsHeuristic);
+            //currentCell = findBestNeighbour(ngbsHeuristic);
         }
     }
     console.log("Goal was not found, current path: ", mazePath);
+    return mazePath;
+}
+
+function astar(): number[][] {
+    const visitedCells = new Set<string>();
+    const priorityQueue = new PriorityQueue(); // TODO
+    const mazePath: number[][] = [];
+
+    let currentCell: Cell = {position: game.start, stringValue: game.start.toString(), cost: 0};
+
+    priorityQueue.push(currentCell);
     return mazePath;
 }
