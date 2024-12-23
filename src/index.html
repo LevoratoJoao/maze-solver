@@ -28,16 +28,17 @@
             <label for="goal">Goal</label>
         </div>
     </fieldset>
-    <button onclick="randomBoard()">Random</button>
+    <button id="randomBoard">Random</button>
     <select name="solve" id="solve-options">
         <option value="">Solve Option</option>
         <option value="dfs">dfs</option>
         <option value="bfs">bfs</option>
+        <option value="bfs">hill climbing</option>
         <option value="a*">a*</option>
     </select>
-    <button onclick="solve()">Solve</button>
-    <button onclick="resetPath()">Reset path</button>
-    <button onclick="resetBoard()">Reset board</button>
+    <button id="solve">Solve</button>
+    <button id="resetPath">Reset path</button>
+    <button id="resetBoard">Reset board</button>
     <p></p>
     <canvas id="app"></canvas>
     <!-- <script type="module" src="../dist/index.mjs"></script> -->
