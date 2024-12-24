@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles/style.css">
+    <title>Maze Maker</title>
+</head>
+<body>
+    <!-- // TODO: Add input to decide how many rows and cols the board has -->
+    <h1>Maze Maker - TypeScript</h1>
+    <div class="canvas-with-controls">
+        <canvas id="app"></canvas>
+        <div class="controls">
+
+            <fieldset>
+                <legend>State:</legend>
+                <div>
+                    <input type="radio" name="state" id="path", value="path" checked>
+                    <label for="path">Path</label>
+                </div>
+                <div>
+                    <input type="radio" name="state" id="wall", value="wall">
+                    <label for="wall">Wall</label>
+                </div>
+                <div>
+                    <input type="radio" name="state" id="start", value="start">
+                    <label for="start">Start</label>
+                </div>
+                <div>
+                    <input type="radio" name="state" id="goal", value="goal">
+                    <label for="goal">Goal</label>
+                </div>
+            </fieldset>
+            <fieldset class="solve-options" id="solve-options">
+                <legend>Algorithms:</legend>
+                <div>
+                    <input type="radio" name="solve" id="dfs", value="dfs" checked>
+                    <label for="dfs">DFS</label>
+                </div>
+                <div>
+                    <input type="radio" name="solve" id="bfs", value="bfs">
+                    <label for="bfs">BFS</label>
+                </div>
+                <div>
+                    <input type="radio" name="solve" id="greedy", value="greedy">
+                    <label for="greedy">Greedy</label>
+                </div>
+                <div>
+                    <input type="radio" name="solve" id="astar", value="astar">
+                    <label for="astar">Astar</label>
+                </div>
+            </fieldset>
+            <div class="buttons">
+                <button id="randomBoard">Random</button>
+                <button id="solve">Solve</button>
+                <button id="resetPath">Reset path</button>
+                <button id="resetBoard">Reset board</button>
+            </div>
+        </div>
+    </div>
+    <!-- <script type="module" src="../dist/index.mjs"></script> -->
+    <script src="./dist/index.js"></script>
+    <script src="./dist/priorityQueue.js"></script>
+
+</body>
+</html>

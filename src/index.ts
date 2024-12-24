@@ -1,10 +1,19 @@
-const BOARD_ROWS = 16; // TODO: Add input to decide how many rows and cols the board has
+const BOARD_ROWS = 32; // TODO: Add input to decide how many rows and cols the board has
 const BOARD_COLS = BOARD_ROWS;
 
 // Types and colors
 type Board = number[][];
 // 0: path, 1: wall, 2: start, 3: goal, 4: route
-const stateColor = ["#202020", "#555555", "#50FF50", "#50FFFF", "#FF5050"];
+interface States {
+    [solve: string]: Array<number | string>;
+};
+const states: States = {
+    "path": [0, "#202020"],
+    "wall": [1, "#555555"],
+    "start": [2, "#50FF50"],
+    "goal": [3, "#50FFFF"],
+    "route": [4, "#FF5050"]
+};
 let pathTimer: NodeJS.Timeout | null = null;
 let mazePath: number[][] = [];
 
@@ -33,8 +42,8 @@ class Game {
         if (this._canvas === null) {
             throw new Error('Could not find canvas');
         }
-        this._canvas.width = 400;
-        this._canvas.height = 400;
+        this._canvas.width = 550;
+        this._canvas.height = 550;
         this._CELL_HEIGHT = this._canvas.height / BOARD_ROWS;
         this._CELL_WIDTH = this._canvas.width / BOARD_COLS;
         this._ctx = this._canvas.getContext("2d");
@@ -136,21 +145,21 @@ class Game {
                 if (this._ctx) {
                     switch (this._board[r][c]) {
                         case 0:
-                            this._ctx.fillStyle = stateColor[0];
+                            this._ctx.fillStyle = states["path"][1] as string;
                             this._ctx.fillRect(x, y, this.CELL_WIDTH, this.CELL_HEIGHT);
                             break;
-                        case 1:
-                            this._ctx.fillStyle = stateColor[1];
+                            case 1:
+                            this._ctx.fillStyle = states["wall"][1] as string;
                             this._ctx.fillRect(x, y, this.CELL_WIDTH, this.CELL_HEIGHT);
                             break;
                         case 2:
                             this._start = [r, c];
-                            this._ctx.fillStyle = stateColor[2];
+                            this._ctx.fillStyle = states["start"][1] as string;
                             this._ctx.fillRect(x, y, this.CELL_WIDTH, this.CELL_HEIGHT);
                             break;
                         case 3:
                             this._goal = [r, c];
-                            this._ctx.fillStyle = stateColor[3];
+                            this._ctx.fillStyle = states["goal"][1] as string;
                             this._ctx.fillRect(x, y, this.CELL_WIDTH, this.CELL_HEIGHT);
                             break;
 
@@ -166,30 +175,26 @@ class Game {
 const game = new Game();
 
 game.canvas.addEventListener('click', (e) => {
-    const rect = game.canvas.getBoundingClientRect();
     const col = Math.floor(e.offsetX / game.CELL_WIDTH);
     const row = Math.floor(e.offsetY / game.CELL_HEIGHT);
 
-    const state = document.getElementsByName("state");
-    for (let i = 0; i < state.length; i++) {
-        if ((state[i] as HTMLInputElement).checked) {
-            if (i === 2 && game.start.length > 0) {
-                if (game.goal[0] === row && game.goal[1] === col) {
-                    game.goal = [];
-                }
-                game.board[game.start[0]][game.start[1]] = 0;
-            }
-            if (i === 3 && game.goal.length > 0) {
-                if (game.start[0] === row && game.start[1] === col) {
-                    game.start = [];
-                }
-                game.board[game.goal[0]][game.goal[1]] = 0;
-            }
-            game.board[row][col] = i;
-            game.render();
-            return;
+    //const state = document.getElementsByName("state");
+    const state = document.querySelector('input[name="state"]:checked') as HTMLInputElement;
+    console.log(state.value);
+    if (state.value === "start" && game.start.length > 0) {
+        if (game.goal[0] === row && game.goal[1] === col) {
+            game.goal = [];
         }
+        game.board[game.start[0]][game.start[1]] = 0;
+    } else if (state.value === "goal" && game.goal.length > 0) {
+        if (game.start[0] === row && game.start[1] === col) {
+            game.start = [];
+        }
+        game.board[game.goal[0]][game.goal[1]] = 0;
     }
+    console.log(states[state.value][0] as number);
+    game.board[row][col] = states[state.value][0] as number;
+    game.render();
 });
 
 let isMouseDown = false;
@@ -223,35 +228,34 @@ document.getElementById("randomBoard")?.addEventListener("click", game.createRan
 document.getElementById("resetPath")?.addEventListener("click", resetPath);
 document.getElementById("resetBoard")?.addEventListener("click", game.createEmptyBoard);
 
+interface SolveOptions {
+    [solve: string]: number[][]
+};
+
 function solve() {
-    const selectElement = document.getElementById('solve-options') as HTMLSelectElement;
+    const solveOptions: SolveOptions = {
+        "dfs"    : dfs(),
+        "bfs"    : bfs(),
+        "greedy" : greedyAlgo(),
+        "astar"  : astar()
+    };
+    const solveSelected = document.querySelector('input[name="solve"]:checked') as HTMLInputElement;
+
     console.log("Game board: ", game.board);
     console.log("Start: ", game.start);
     console.log("Goal: ", game.goal);
+    console.log("Solve option: ", solveSelected.value);
+
     resetPath();
-    switch (selectElement.selectedIndex) {
-        case 1:
-            mazePath = dfs();
-            break;
-        case 2:
-            mazePath = bfs();
-            break;
-        case 3:
-            mazePath = greedyAlgo();
-            break;
-        case 4:
-            mazePath = astar();
-            break;
-        default:
-            break;
-    }
+    mazePath = solveOptions[solveSelected.value];
+
     let index = 0;
     function fillPath() {
         if (index < mazePath.length) {
             if ((mazePath[index][0] != game.goal[0] || mazePath[index][1] != game.goal[1])) {
                 const x = mazePath[index][1] * game.CELL_WIDTH;
                 const y = mazePath[index][0] * game.CELL_HEIGHT;
-                game.ctx.fillStyle = stateColor[4];
+                game.ctx.fillStyle = states["route"][1] as string;
                 game.ctx.fillRect(x, y, game.CELL_WIDTH, game.CELL_HEIGHT);
             }
             index++;
@@ -269,7 +273,7 @@ function resetPath() {
         const x = mazePath[i][1] * game.CELL_WIDTH;
         const y = mazePath[i][0] * game.CELL_HEIGHT;
 
-        game.ctx.fillStyle = stateColor[0];
+        game.ctx.fillStyle = states["path"][1] as string;;
         game.ctx.fillRect(x, y, game.CELL_WIDTH, game.CELL_HEIGHT);
     }
 }
@@ -405,7 +409,6 @@ function greedyAlgo(): number[][] {
                     ngbsHeuristic.push({position: neighbour, stringValue: neighbour.toString(), cost: euclideanHeuristic(neighbour, game.goal)});
                 }
             }
-            console.log(ngbsHeuristic);
             //currentCell = findBestNeighbour(ngbsHeuristic);
         }
     }

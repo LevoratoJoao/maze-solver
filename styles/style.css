@@ -1,0 +1,62 @@
+body {
+    background: #181818;
+    color: whitesmoke;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+body {
+    background: #181818;
+    color: whitesmoke;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    margin: auto;
+    max-width: 960px;
+    font-size: 16px;
+}
+h1 {
+    font-size: 40px;
+    text-align: center;
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+.canvas-with-controls {
+    display: flex;
+}
+
+.controls {
+    padding-left: 20px;
+}
+
+.buttons {
+    display: flex;
+    margin-top: 10px;
+}
+
+fieldset {
+    border: 3px solid #333;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+button {
+    height: 40px;
+    border-radius: 8px;
+    font-size: 16px;
+    border: none;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    /* width: 40px; */
+    margin-right: 10px;
+}
+
+/* .solve-options {
+    display: flex;
+    border-radius: 8px;
+    margin-right: 10px;
+    font-size: 16px;
+    border: none;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+} */
