@@ -1,37 +1,40 @@
-const BOARD_ROWS = 32; // TODO: Add input to decide how many rows and cols the board has
-const BOARD_COLS = BOARD_ROWS;
+const sizeOptions = document.getElementById("size-options") as HTMLElement;
+const selectedOption = document.querySelector('input[name="size"]:checked') as HTMLInputElement;
 
-// Types and colors
+let BOARD_ROWS: number = Number(selectedOption.value);
+let BOARD_COLS = BOARD_ROWS;
+
 type Board = number[][];
-// 0: path, 1: wall, 2: start, 3: goal, 4: route
+
 interface States {
     [solve: string]: Array<number | string>;
 };
 const states: States = {
-    "path": [0, "#202020"],
-    "wall": [1, "#555555"],
-    "start": [2, "#50FF50"],
-    "goal": [3, "#50FFFF"],
-    "route": [4, "#FF5050"]
+    "path"  : [0, "#202020"],
+    "wall"  : [1, "#555555"],
+    "start" : [2, "#50FF50"],
+    "goal"  : [3, "#50FFFF"],
+    "route" : [4, "#FF5050"]
 };
+
 let pathTimer: NodeJS.Timeout | null = null;
 let mazePath: number[][] = [];
 
 interface Cell {
-    position: number[];
-    stringValue: string;
-    cost: number;
+    position    : number[];
+    stringValue : string;
+    cost        : number;
 }
 
 class Game {
 
-    private _canvas: HTMLCanvasElement;
-    private _ctx: CanvasRenderingContext2D | null;
-    private _board: Board = [];
-    private _start: number[] = [];
-    private _goal: number[] = [];
-    private _CELL_WIDTH: number = 0;
-    private _CELL_HEIGHT: number = 0;
+    private _canvas        : HTMLCanvasElement;
+    private _ctx           : CanvasRenderingContext2D | null;
+    private _board         : Board = [];
+    private _start         : number[] = [];
+    private _goal          : number[] = [];
+    private _CELL_WIDTH    : number = 0;
+    private _CELL_HEIGHT   : number = 0;
 
     constructor() {
         this._board = [];
@@ -92,7 +95,7 @@ class Game {
     }
 
     public set CELL_WIDTH(value: number) {
-        this._CELL_WIDTH = value;
+        this._CELL_WIDTH = this._canvas.width / value;
     }
 
     public get CELL_HEIGHT(): number {
@@ -100,7 +103,7 @@ class Game {
     }
 
     public set CELL_HEIGHT(value: number) {
-        this._CELL_HEIGHT = value;
+        this._CELL_HEIGHT = this._canvas.height / value;
     }
 
     public createEmptyBoard() {
@@ -173,6 +176,17 @@ class Game {
 }
 
 const game = new Game();
+
+sizeOptions.addEventListener('change', (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    if (target && target.name === "size") {
+        BOARD_ROWS = Number(target.value);
+        BOARD_COLS = BOARD_ROWS;
+        game.CELL_HEIGHT = BOARD_ROWS;
+        game.CELL_WIDTH = BOARD_COLS;
+        game.createRandomBoard();
+    }
+})
 
 game.canvas.addEventListener('click', (e) => {
     const col = Math.floor(e.offsetX / game.CELL_WIDTH);
