@@ -35,8 +35,8 @@ class Game {
         }
         this._canvas.width = 400;
         this._canvas.height = 400;
-        this.CELL_HEIGHT = this._canvas.height / BOARD_ROWS;
-        this.CELL_WIDTH = this._canvas.width / BOARD_COLS;
+        this._CELL_HEIGHT = this._canvas.height / BOARD_ROWS;
+        this._CELL_WIDTH = this._canvas.width / BOARD_COLS;
         this._ctx = this._canvas.getContext("2d");
         if (this._ctx === null) {
             throw new Error('Could not initialize 2d context');
@@ -129,10 +129,10 @@ class Game {
         if (pathTimer) {
             clearTimeout(pathTimer);
         }
-        for (let c = 0; c < BOARD_COLS; ++c) {
-            for (let r = 0; r < BOARD_ROWS; ++r) {
-                const x = r * this.CELL_WIDTH;
-                const y = c * this.CELL_HEIGHT;
+        for (let r = 0; r < BOARD_ROWS; ++r) {
+            for (let c = 0; c < BOARD_COLS; ++c) {
+                const x = c * this.CELL_WIDTH;
+                const y = r * this.CELL_HEIGHT;
                 if (this._ctx) {
                     switch (this._board[r][c]) {
                         case 0:
@@ -161,14 +161,14 @@ class Game {
             }
         }
     }
-
 }
 
 const game = new Game();
 
 game.canvas.addEventListener('click', (e) => {
-    const col = Math.floor(e.offsetY / game.CELL_HEIGHT);
-    const row = Math.floor(e.offsetX / game.CELL_WIDTH);
+    const rect = game.canvas.getBoundingClientRect();
+    const col = Math.floor(e.offsetX / game.CELL_WIDTH);
+    const row = Math.floor(e.offsetY / game.CELL_HEIGHT);
 
     const state = document.getElementsByName("state");
     for (let i = 0; i < state.length; i++) {
@@ -200,8 +200,8 @@ game.canvas.addEventListener('mousedown', () => {
 
 game.canvas.addEventListener("mousemove", (e) => {
     if (isMouseDown) {
-        let col = Math.floor(e.offsetY / game.CELL_HEIGHT);
-        let row = Math.floor(e.offsetX / game.CELL_WIDTH);
+        let col = Math.floor(e.offsetX / game.CELL_WIDTH);
+        let row = Math.floor(e.offsetY / game.CELL_HEIGHT);
         const selectedState = document.querySelector('input[name="state"]:checked') as HTMLInputElement;
         if (selectedState && selectedState.value === "wall") {
             game.board[row][col] = 1;
@@ -249,8 +249,8 @@ function solve() {
     function fillPath() {
         if (index < mazePath.length) {
             if ((mazePath[index][0] != game.goal[0] || mazePath[index][1] != game.goal[1])) {
-                const x = mazePath[index][0] * game.CELL_HEIGHT;
-                const y = mazePath[index][1] * game.CELL_WIDTH;
+                const x = mazePath[index][1] * game.CELL_WIDTH;
+                const y = mazePath[index][0] * game.CELL_HEIGHT;
                 game.ctx.fillStyle = stateColor[4];
                 game.ctx.fillRect(x, y, game.CELL_WIDTH, game.CELL_HEIGHT);
             }
@@ -266,8 +266,8 @@ function resetPath() {
         clearTimeout(pathTimer);
     }
     for (let i = 0; i < mazePath.length; i++) {
-        const x = mazePath[i][0] * game.CELL_HEIGHT;
-        const y = mazePath[i][1] * game.CELL_WIDTH;
+        const x = mazePath[i][1] * game.CELL_WIDTH;
+        const y = mazePath[i][0] * game.CELL_HEIGHT;
 
         game.ctx.fillStyle = stateColor[0];
         game.ctx.fillRect(x, y, game.CELL_WIDTH, game.CELL_HEIGHT);
