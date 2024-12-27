@@ -106,7 +106,7 @@ class PriorityQueue<T> {
      * _bubbleDown - moves node down on the tree
      */
     public _bubbleDown(pos: number) {
-        const size = this.size() - 1;
+        const size = this.size();
         while (true) {
             const left = 2 * pos + 1;
             const right = left + 1;

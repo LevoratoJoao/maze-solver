@@ -23,6 +23,7 @@ let mazePath: number[][] = [];
 interface Cell {
     position    : number[];
     stringValue : string;
+    gCost       : number;
     cost        : number;
 }
 
@@ -250,7 +251,7 @@ function solve() {
     const solveOptions: SolveOptions = {
         "dfs"    : dfs(),
         "bfs"    : bfs(),
-        "greedy" : greedyAlgo(),
+        "gbfs" : gbfs(),
         "astar"  : astar()
     };
     const solveSelected = document.querySelector('input[name="solve"]:checked') as HTMLInputElement;
@@ -287,32 +288,25 @@ function resetPath() {
         const x = mazePath[i][1] * game.CELL_WIDTH;
         const y = mazePath[i][0] * game.CELL_HEIGHT;
 
-        game.ctx.fillStyle = states["path"][1] as string;;
+        game.ctx.fillStyle = states["path"][1] as string;
         game.ctx.fillRect(x, y, game.CELL_WIDTH, game.CELL_HEIGHT);
     }
 }
 
-/**
- *  TODO: More optimized, try latter
+function getNeighbours(cell: number[]): number[][] {
     const directions = [
         [-1, 0], [1, 0], // vertical
         [0, -1], [0, 1]  // horizontal
     ];
-    const neighbours = [];
-    for (const [dr, dc] of directions) {
- */
-function getNeighbours(cell: number[]): number[][] {
     let ngb: number[][] = [];
-    for (let dr = -1; dr <= 1; ++dr) {
-        for (let dc = -1; dc <= 1; ++dc) {
-            if ((dr != 0 || dc != 0) && (dr != dc) && (dr != -dc)) {
-                const r = cell[0] + dr;
-                const c = cell[1] + dc;
-                if ((0 <= r && r < BOARD_ROWS) && (0 <= c && c < BOARD_COLS)) {
-                    if (game.board[r][c] === 0 || game.board[r][c] === 3) {
-                        ngb.push([r, c]);
-                    }
-                }
+    for (const [dr, dc] of directions) {
+        const r = cell[0] + dr;
+        const c = cell[1] + dc;
+        if ((0 <= r && r < BOARD_ROWS) && (0 <= c && c < BOARD_COLS)) {
+            console.log(`Checking neighbor at (${r}, ${c}): ${game.board[r][c]}`);
+
+            if (game.board[r][c] === 0 || game.board[r][c] === 3) {
+                ngb.push([r, c]);
             }
         }
     }
@@ -386,7 +380,7 @@ function euclideanHeuristic(neighbour: number[], goal: number[]): number {
 }
 
 function findBestNeighbour(neighbours: Array<Cell>): Cell {
-    let bestNeighbour: Cell = { position: [], stringValue: "", cost: -1};
+    let bestNeighbour: Cell = { position: [], stringValue: "", gCost:0, cost: -1};
     let bestCost = Infinity;
     for (const neighbour of neighbours) {
         const cost = neighbour.cost + 1
@@ -398,18 +392,16 @@ function findBestNeighbour(neighbours: Array<Cell>): Cell {
     return bestNeighbour;
 }
 
-function greedyAlgo(): number[][] {
-    let currentCell: Cell = {position: game.start, stringValue: game.start.toString(), cost: 0};
+function gbfs(): number[][] {
+    let currentCell: Cell = {position: game.start, stringValue: game.start.toString(), gCost:0, cost: 0};
     const visitedCells = new Set<string>();
-    // const ngbsHeuristic = new Array<Cell>();
     const ngbsHeuristic = new PriorityQueue();
     const mazePath: number[][] = [];
 
     ngbsHeuristic.push(currentCell);
 
     while (ngbsHeuristic.size() > 0) {
-        const poppedCell = ngbsHeuristic.pop();
-        currentCell = poppedCell;
+        currentCell = ngbsHeuristic.pop();
         if (game.goal.toString() === currentCell.stringValue) {
             console.log("Goal was found, path: ", mazePath);
             mazePath.shift();
@@ -420,23 +412,50 @@ function greedyAlgo(): number[][] {
             mazePath.push(currentCell.position);
             for (const neighbour of getNeighbours(currentCell.position)) {
                 if (!visitedCells.has(neighbour.toString())) {
-                    ngbsHeuristic.push({position: neighbour, stringValue: neighbour.toString(), cost: euclideanHeuristic(neighbour, game.goal)});
+                    ngbsHeuristic.push({position: neighbour, stringValue: neighbour.toString(), gCost:0, cost: euclideanHeuristic(neighbour, game.goal)});
                 }
             }
-            //currentCell = findBestNeighbour(ngbsHeuristic);
         }
     }
     console.log("Goal was not found, current path: ", mazePath);
     return mazePath;
 }
 
+function astarHeuristic(neighbour: number[], goal: number[]): number {
+    return manhanttanHeuristic(neighbour, goal);
+}
+
 function astar(): number[][] {
     const visitedCells = new Set<string>();
-    const priorityQueue = new PriorityQueue(); // TODO
+    const priorityQueue = new PriorityQueue();
+    const gCosts = new Map<string, number>();
     const mazePath: number[][] = [];
 
-    let currentCell: Cell = {position: game.start, stringValue: game.start.toString(), cost: 0};
-
+    let currentCell: Cell = {position: game.start, stringValue: game.start.toString(), gCost:0, cost: 0};
     priorityQueue.push(currentCell);
+    gCosts.set(currentCell.stringValue, 0);
+
+    while (!priorityQueue.isEmpty()) {
+        currentCell = priorityQueue.pop();
+        if (currentCell.stringValue === game.goal.toString()) {
+            console.log("Goal was found, path: ", mazePath);
+            mazePath.shift();
+            return mazePath
+        }
+        if (!visitedCells.has(currentCell.stringValue)) {
+            visitedCells.add(currentCell.stringValue);
+            mazePath.push(currentCell.position);
+            for (const neighbour of getNeighbours(currentCell.position)) {
+                const gCost = gCosts.get(currentCell.stringValue)! + 1;
+                const fCost = gCost + astarHeuristic(neighbour, game.goal);
+                if (!gCosts.has(neighbour.toString()) || gCost < gCosts.get(neighbour.toString())!) {
+                    gCosts.set(neighbour.toString(), gCost);
+                    if (!visitedCells.has(neighbour.toString())) {
+                        priorityQueue.push({position: neighbour, stringValue: neighbour.toString(), gCost: gCost, cost: fCost});
+                    }
+                }
+            }
+        }
+    }
     return mazePath;
 }
