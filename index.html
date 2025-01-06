@@ -8,7 +8,7 @@
 </head>
 <body>
     <!-- // TODO: Add input to decide how many rows and cols the board has -->
-    <h1>Maze Solver - TypeScript</h1>
+    <h1>Maze Solver</h1>
     <div class="canvas-with-controls">
         <canvas id="app"></canvas>
         <div class="controls">
@@ -67,8 +67,27 @@
                     <label for="gbfs">GBFS </label>
                 </div>
                 <div>
+                    <input type="radio" name="solve" id="ucs", value="ucs">
+                    <label for="ucs">UCS </label>
+                </div>
+                <div>
                     <input type="radio" name="solve" id="astar", value="astar">
                     <label for="astar">Astar</label>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Heuristic:</legend>
+                <div>
+                    <input type="radio" name="heuristic" id="manhattan", value="manhattan" checked>
+                    <label for="manhattan">Manhattan</label>
+                </div>
+                <div>
+                    <input type="radio" name="heuristic" id="euclidean", value="euclidean">
+                    <label for="euclidean">Euclidean</label>
+                </div>
+                <div>
+                    <input type="radio" name="heuristic" id="chebyshev", value="chebyshev">
+                    <label for="chebyshev">Chebyshev</label>
                 </div>
             </fieldset>
             <div class="buttons">
